@@ -1,0 +1,193 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+
+  <meta charset="UTF-8" />
+
+  <meta
+    name="viewport"
+    content="width=device-width, initial-scale=1.0"
+  />
+
+  <title>Live Crypto Market</title>
+
+  <!-- Socket.IO -->
+  <script src="/socket.io/socket.io.js"></script>
+
+  <style>
+
+    body {
+      margin: 0;
+      padding: 20px;
+      background: #111;
+      color: white;
+      font-family: Arial;
+    }
+
+    h1 {
+      margin-bottom: 20px;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      background: #1b1b1b;
+    }
+
+    th, td {
+      padding: 12px;
+      border-bottom: 1px solid #333;
+      text-align: left;
+    }
+
+    th {
+      background: #222;
+    }
+
+    tr:hover {
+      background: #2a2a2a;
+    }
+
+    .green {
+      color: lime;
+    }
+
+    .red {
+      color: red;
+    }
+
+  </style>
+
+</head>
+
+<body>
+
+  <h1>Live Crypto Market</h1>
+
+  <table>
+
+    <thead>
+
+      <tr>
+        <th>Coin</th>
+        <th>Price</th>
+        <th>24h Change</th>
+        <th>High</th>
+        <th>Low</th>
+        <th>Volume</th>
+      </tr>
+
+    </thead>
+
+    <tbody id="marketTable"></tbody>
+
+  </table>
+
+  <script>
+
+    // Connect Socket.IO
+    const socket = io();
+
+    // Store market data
+    const marketMap = {};
+
+    // Connected
+    socket.on("connect", () => {
+
+      console.log(
+        "Connected To Backend"
+      );
+    });
+
+    // Receive market updates
+    socket.on(
+      "market-update",
+      (coin) => {
+
+        marketMap[
+          coin.symbol
+        ] = coin;
+
+        renderTable();
+      }
+    );
+
+    // Render table
+    function renderTable() {
+
+      const tbody =
+        document.getElementById(
+          "marketTable"
+        );
+
+      tbody.innerHTML = "";
+
+      // Convert object to array
+      const coins =
+        Object.values(marketMap);
+
+      // Sort by volume
+      coins.sort((a, b) =>
+
+        parseFloat(b.volume) -
+        parseFloat(a.volume)
+      );
+
+      // Show all coins
+      coins.forEach((coin) => {
+
+        const change =
+          parseFloat(coin.change);
+
+        const color =
+          change >= 0
+            ? "green"
+            : "red";
+
+        tbody.innerHTML += `
+
+          <tr>
+
+            <td>
+              ${coin.symbol}
+            </td>
+
+            <td>
+              $${parseFloat(
+                coin.price
+              ).toFixed(4)}
+            </td>
+
+            <td class="${color}">
+              ${change.toFixed(2)}%
+            </td>
+
+            <td>
+              ${parseFloat(
+                coin.high
+              ).toFixed(4)}
+            </td>
+
+            <td>
+              ${parseFloat(
+                coin.low
+              ).toFixed(4)}
+            </td>
+
+            <td>
+              ${parseFloat(
+                coin.volume
+              ).toFixed(0)}
+            </td>
+
+          </tr>
+        `;
+      });
+    }
+
+  </script>
+
+</body>
+
+</html>
